@@ -18,9 +18,9 @@ const shelfById = id => S().shelves.find(s => s.id === id);
 const binById = id => S().bins.find(b => b.id === id);
 const shelfName = s => (s ? (s.code || `Rua ${s.street} (${s.x},${s.y})`) : '?');
 const sortedBins = () => [...S().bins].sort((a, b) => a.street - b.street || a.level - b.level || a.seq - b.seq);
-const binLabel = b => `${b.address} · ${shelfName(shelfById(b.shelfId))}`;
+const binLabel = b => `${b.address} Â· ${shelfName(shelfById(b.shelfId))}`;
 
-// ---------- Navegação ----------
+// ---------- NavegaÃ§Ã£o ----------
 document.querySelectorAll('nav button').forEach(b => b.onclick = () => show(b.dataset.tab));
 function show(name) {
   document.querySelectorAll('section').forEach(s => s.classList.toggle('active', s.id === name));
@@ -28,7 +28,7 @@ function show(name) {
   ({ layout: renderLayout, placements: renderPlacements, pick: renderPick, catalog: renderCatalog })[name]?.();
 }
 
-// ---------- Catálogo ----------
+// ---------- CatÃ¡logo ----------
 function renderCatalog() {
   const { products, placements } = S();
   const q = $('#search').value.trim().toLowerCase();
@@ -36,14 +36,14 @@ function renderCatalog() {
   list.innerHTML = '';
   products.filter(p => `${p.name} ${p.sku}`.toLowerCase().includes(q)).forEach(p => {
     const locs = placements.filter(pl => pl.productId === p.id)
-      .map(pl => `${binById(pl.binId)?.address ?? '?'} · ${pl.qty} un.`).join(' | ') || 'sem locação';
+      .map(pl => `${binById(pl.binId)?.address ?? '?'} Â· ${pl.qty} un.`).join(' | ') || 'sem locaÃ§Ã£o';
     const row = document.createElement('div');
     row.className = 'card';
     row.innerHTML = `
       <input type="checkbox" ${selected.has(p.id) ? 'checked' : ''}>
       <div style="flex:1"><b>${esc(p.name)}</b> <span class="muted">${esc(p.sku)}</span>
         <div class="muted">${esc(locs)}</div></div>
-      <button class="ghost" title="Remover">🗑</button>`;
+      <button class="ghost" title="Remover">ðŸ—‘</button>`;
     row.querySelector('input').onchange = e => {
       e.target.checked ? selected.add(p.id) : selected.delete(p.id);
       updateCount();
@@ -61,7 +61,7 @@ $('#search').oninput = renderCatalog;
 $('#p-add').onclick = () => {
   const name = $('#p-name').value.trim(), sku = $('#p-sku').value.trim();
   if (!name) return alert('Informe o nome do produto');
-  store.addProduct({ name, sku: sku || '—' });
+  store.addProduct({ name, sku: sku || 'â€”' });
   $('#p-name').value = ''; $('#p-sku').value = '';
 };
 $('#make-pick').onclick = () => {
@@ -105,19 +105,19 @@ function renderLayout() {
     .sort((a, b) => a.level - b.level || a.binNo - b.binNo);
   info.innerHTML = `
     <div class="card"><b>Estante</b>
-      rótulo <input id="sh-code" value="${esc(sh.code ?? '')}" size="8">
-      níveis <input id="sh-levels" type="number" min="1" max="${LIMITS.maxLevels}" value="${sh.levels}" style="width:60px">
+      rÃ³tulo <input id="sh-code" value="${esc(sh.code ?? '')}" size="8">
+      nÃ­veis <input id="sh-levels" type="number" min="1" max="${LIMITS.maxLevels}" value="${sh.levels}" style="width:60px">
       <button class="primary" id="sh-save">Salvar</button>
       <button class="ghost" id="sh-del">Excluir</button>
-      <span class="muted">rua ${sh.street} · posição ${sh.x},${sh.y}</span>
+      <span class="muted">rua ${sh.street} Â· posiÃ§Ã£o ${sh.x},${sh.y}</span>
     </div>
-    <div class="muted">Endereços: ${shBins.map(b => b.address).join(' · ')}</div>`;
+    <div class="muted">EndereÃ§os: ${shBins.map(b => b.address).join(' Â· ')}</div>`;
   $('#sh-save').onclick = () => guard(() => store.updateShelf(sh.id, {
     code: $('#sh-code').value.trim() || null,
     levels: +$('#sh-levels').value,
   }));
   $('#sh-del').onclick = () => {
-    if (!confirm('Excluir a estante, seus bins e locações?')) return;
+    if (!confirm('Excluir a estante, seus bins e locaÃ§Ãµes?')) return;
     selShelfId = null;
     store.removeShelf(sh.id);
   };
@@ -139,17 +139,17 @@ $('#grid-canvas').onclick = e => {
   const shelfAt = shelves.find(s => s.x === c.x && s.y === c.y);
 
   if (layoutMode === 'depot') {
-    if (shelfAt) return alert('Essa célula está ocupada por uma estante.');
+    if (shelfAt) return alert('Essa cÃ©lula estÃ¡ ocupada por uma estante.');
     return guard(() => store.setLayout({ depot: c }));
   }
   if (shelfAt) { selShelfId = shelfAt.id; return renderLayout(); }
-  if (key(c) === key(layout.depot)) return alert('Essa célula é a entrada.');
+  if (key(c) === key(layout.depot)) return alert('Essa cÃ©lula Ã© a entrada.');
 
-  const code = prompt('Rótulo da estante (opcional, ex.: A1):', '');
+  const code = prompt('RÃ³tulo da estante (opcional, ex.: A1):', '');
   if (code === null) return;
   const lastStreet = shelves.length ? shelves[shelves.length - 1].street : 1;
-  const street = Number(prompt('Número da rua:', String(lastStreet)));
-  if (!Number.isInteger(street) || street < 1) return alert('Número de rua inválido.');
+  const street = Number(prompt('NÃºmero da rua:', String(lastStreet)));
+  if (!Number.isInteger(street) || street < 1) return alert('NÃºmero de rua invÃ¡lido.');
   guard(() => { selShelfId = store.addShelf({ code: code.trim() || null, street, x: c.x, y: c.y, levels: 4 }).id; });
 };
 
@@ -208,7 +208,7 @@ function drawMap(canvas, { route = null, stops = [], highlightShelf = null, coll
   });
 }
 
-// ---------- Locações (por endereço de bin) ----------
+// ---------- LocaÃ§Ãµes (por endereÃ§o de bin) ----------
 function renderPlacements() {
   const { products, placements } = S();
   const bins = sortedBins();
@@ -217,13 +217,13 @@ function renderPlacements() {
   $('#pl-product').innerHTML = products.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
   const free = bins.filter(b => !occupied.has(b.id));
   $('#pl-bin').innerHTML = free.length
-    ? free.map(b => `<option value="${b.id}">${esc(binLabel(b))} · livre</option>`).join('')
-    : '<option value="">Nenhum endereço livre</option>';
+    ? free.map(b => `<option value="${b.id}">${esc(binLabel(b))} Â· livre</option>`).join('')
+    : '<option value="">Nenhum endereÃ§o livre</option>';
 
   const list = $('#placement-list');
   list.innerHTML = '';
   if (!products.length || !bins.length) {
-    list.innerHTML = '<p class="muted">Cadastre produtos e estantes antes de criar locações.</p>';
+    list.innerHTML = '<p class="muted">Cadastre produtos e estantes antes de criar locaÃ§Ãµes.</p>';
   }
   placements.forEach(pl => {
     const options = bins
@@ -237,7 +237,7 @@ function renderPlacements() {
       <select data-f="bin">${options}</select>
       qtd <input data-f="qty" type="number" min="0" value="${pl.qty}" style="width:80px">
       <button class="primary">Salvar</button>
-      <button class="ghost">🗑</button>`;
+      <button class="ghost">ðŸ—‘</button>`;
     const bin = row.querySelector('[data-f="bin"]');
     const qty = row.querySelector('[data-f="qty"]');
     const [save, del] = row.querySelectorAll('button');
@@ -252,11 +252,11 @@ function productById(id) { return S().products.find(p => p.id === id); }
 $('#pl-add').onclick = () => {
   const productId = $('#pl-product').value, binId = $('#pl-bin').value;
   const qty = +$('#pl-qty').value || 0;
-  if (!productId || !binId) return alert('Selecione produto e endereço livre');
+  if (!productId || !binId) return alert('Selecione produto e endereÃ§o livre');
   guard(() => store.place({ productId, binId, qty }));
 };
 
-// ---------- Separação ----------
+// ---------- SeparaÃ§Ã£o ----------
 function buildPlan() {
   const { products, placements, shelves, layout } = S();
   const grid = buildGrid(layout, shelves);
@@ -295,19 +295,19 @@ function renderPick() {
   }
 
   const warnings = [
-    ...plan.missing.map(n => `${n}: sem estoque em nenhum endereço`),
-    ...plan.unreachable.map(sh => `${shelfName(sh.shelf)}: inacessível`),
+    ...plan.missing.map(n => `${n}: sem estoque em nenhum endereÃ§o`),
+    ...plan.unreachable.map(sh => `${shelfName(sh.shelf)}: inacessÃ­vel`),
   ];
   $('#pick-summary').innerHTML = !selected.size
-    ? '<p class="muted">Selecione produtos no Catálogo para gerar a separação.</p>'
-    : `<div><b>${plan.stops.length}</b> parada(s) · <b>${plan.steps}</b> passo(s) no total · ${collected.size}/${plan.stops.length} coletada(s)</div>`
+    ? '<p class="muted">Selecione produtos no CatÃ¡logo para gerar a separaÃ§Ã£o.</p>'
+    : `<div><b>${plan.stops.length}</b> parada(s) Â· <b>${plan.steps}</b> passo(s) no total Â· ${collected.size}/${plan.stops.length} coletada(s)</div>`
       + (warnings.length ? `<div style="color:#b45309;width:100%">${warnings.map(esc).join('<br>')}</div>` : '');
 
   const list = $('#pick-list');
   list.innerHTML = plan.stops.map((st, i) => `
     <div class="card" style="${collected.has(i) ? 'opacity:.5' : ''}">
       <div style="flex:1"><b>${i + 1}. ${esc(shelfName(st.shelf))}</b>
-        <div class="muted">${st.items.map(it => `${it.qty}× ${esc(it.product.name)} · ${esc(it.address)}`).join(' · ')}</div>
+        <div class="muted">${st.items.map(it => `${it.qty}Ã— ${esc(it.product.name)} Â· ${esc(it.address)}`).join(' Â· ')}</div>
       </div>
       <button class="ghost" data-i="${i}">${collected.has(i) ? 'Desfazer' : 'Coletado'}</button>
     </div>`).join('');
@@ -322,18 +322,17 @@ function renderPick() {
 
 $('#open-ar').onclick = () => {
   if (!plan?.stops.length) return alert('Nenhuma parada para exibir em RA.');
-  const next = plan.stops.findIndex((_, i) => !collected.has(i));
-  if (next === -1) return alert('Todos os itens já foram coletados.');
+  if (collected.size >= plan.stops.length) return alert('Todos os itens jÃ¡ foram coletados.');
   const { layout, shelves, bins, placements } = S();
   startAR({
     layout, shelves, bins, placements, plan,
+    collected: [...collected],
     overlay: $('#ar-overlay'),
-    startAt: next,
     onCollect: i => { collected.add(i); renderPick(); },
   });
 };
 
-// ---------- Inicialização ----------
+// ---------- InicializaÃ§Ã£o ----------
 if (!S().products.length && !S().shelves.length) store.seed();
 
 const renders = { catalog: renderCatalog, layout: renderLayout, placements: renderPlacements };
