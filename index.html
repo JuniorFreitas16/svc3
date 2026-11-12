@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SVC Digital Warehouse</title>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+}}
+</script>
+<style>
+  body{font-family:system-ui,sans-serif;margin:0;background:#f4f5f7;color:#222}
+  header{background:#1f2937;color:#fff;padding:12px 16px;font-weight:600}
+  nav{display:flex;gap:6px;padding:8px;background:#e5e7eb;flex-wrap:wrap}
+  nav button{flex:1;min-width:110px;padding:10px;border:0;border-radius:8px;background:#fff;font-size:15px}
+  nav button.active{background:#2563eb;color:#fff}
+  main{padding:12px;max-width:900px;margin:auto}
+  section{display:none} section.active{display:block}
+  input,select{padding:8px;border:1px solid #cbd5e1;border-radius:6px;font-size:15px;margin:2px}
+  button.primary{background:#2563eb;color:#fff;border:0;padding:10px 14px;border-radius:8px;font-size:15px}
+  button.ghost{background:#fff;border:1px solid #cbd5e1;padding:8px 12px;border-radius:8px;font-size:14px}
+  .card{background:#fff;border-radius:10px;padding:10px;margin:6px 0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  canvas{background:#fff;border-radius:10px;display:block;margin:8px 0;touch-action:none}
+  .muted{color:#64748b;font-size:13px}
+  #ar-overlay{position:fixed;left:0;right:0;bottom:0;z-index:10;background:rgba(15,23,42,.85);color:#fff;padding:12px;font-size:15px}
+  #ar-overlay[hidden]{display:none}
+  #ar-overlay .bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  #ar-overlay button{flex:1;padding:12px;border:0;border-radius:8px;background:#fff;color:#111;font-size:15px}
+  #ar-overlay #ar-collect{background:#22c55e;color:#fff;font-weight:600}
+  body.ar-on > header, body.ar-on > nav, body.ar-on > main{display:none}
+</style>
+</head>
+<body>
+<header>SVC Digital Warehouse</header>
+<nav>
+  <button data-tab="catalog" class="active">Catálogo</button>
+  <button data-tab="layout">Layout</button>
+  <button data-tab="placements">Locações</button>
+  <button data-tab="pick">Separação</button>
+</nav>
+<main>
+  <section id="catalog" class="active">
+    <div class="card">
+      <input id="p-name" placeholder="Nome do produto" style="flex:2">
+      <input id="p-sku" placeholder="SKU" style="flex:1">
+      <button class="primary" id="p-add">Adicionar</button>
+    </div>
+    <input id="search" placeholder="Buscar produto..." style="width:100%;box-sizing:border-box">
+    <p><span id="sel-count" class="muted"></span></p>
+    <div id="product-list"></div>
+    <p>
+      <button class="primary" id="make-pick">Criar separação com selecionados</button>
+      <button class="ghost" id="reset">Restaurar exemplo</button>
+    </p>
+  </section>
+
+  <section id="layout">
+    <div class="card">
+      Largura <input id="grid-w" type="number" min="3" max="52" style="width:70px">
+      Altura <input id="grid-h" type="number" min="3" max="40" style="width:70px">
+      <button class="ghost" id="grid-apply">Aplicar tamanho</button>
+      <button class="ghost" id="mode-shelf">Estantes</button>
+      <button class="ghost" id="mode-depot">Entrada</button>
+    </div>
+    <p class="muted">Estantes: clique em célula livre para criar (informe a rua) ou em estante para editar. Entrada: clique para definir o ponto de partida. Cada nível tem 2 bins com endereço N{rua}-{nível}-{posição}.</p>
+    <div style="overflow-x:auto"><canvas id="grid-canvas"></canvas></div>
+    <div id="shelf-info"></div>
+  </section>
+
+  <section id="placements">
+    <div class="card">
+      <select id="pl-product"></select>
+      <select id="pl-bin"></select>
+      qtd <input id="pl-qty" type="number" min="0" value="1" style="width:80px">
+      <button class="primary" id="pl-add">Vincular</button>
+    </div>
+    <div id="placement-list"></div>
+  </section>
+
+  <section id="pick">
+    <div id="pick-summary" class="card"></div>
+    <div style="overflow-x:auto"><canvas id="route-canvas"></canvas></div>
+    <div id="pick-list"></div>
+    <p><button class="primary" id="open-ar">Abrir em RA</button></p>
+  </section>
+</main>
+
+<div id="ar-overlay" hidden>
+  <div id="ar-info"></div>
+  <div class="bar">
+    <button id="ar-collect">Coletei</button>
+    <button id="ar-zoom-out">−</button>
+    <button id="ar-zoom-in">+</button>
+    <button id="ar-reset">Reposicionar</button>
+    <button id="ar-exit">Sair</button>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
